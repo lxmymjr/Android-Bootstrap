@@ -52,6 +52,27 @@
             android:name=".BootstrapEditTextExample"
             android:label="BootstrapEditTextExample"
             />
+        <activity
+            android:name=".BootstrapWellExample"
+            android:label="BootstrapWell"
+            />
+        <activity
+            android:name=".BootstrapDropDownExample"
+            android:label="BootstrapDropDownExample"
+            />
+        <activity
+            android:name=".BootstrapBadgeExample"
+            android:label="BootstrapBadgeExample"
+            />
+        <activity
+            android:name=".BootstrapAlertExample"
+            android:label="BootstrapAlertExample"
+            />
+
+        <activity
+            android:name=".BootstrapProgressBarGroupExample"
+            android:label="BootstrapProgressBarGroupExample"
+            />
     </application>
 
 </manifest>

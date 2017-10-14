@@ -3,7 +3,6 @@ package com.beardedhen.androidbootstrap;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -18,6 +17,7 @@ import com.beardedhen.androidbootstrap.api.view.BootstrapBrandView;
 import com.beardedhen.androidbootstrap.api.view.BootstrapSizeView;
 import com.beardedhen.androidbootstrap.api.view.RoundableView;
 import com.beardedhen.androidbootstrap.utils.DimenUtils;
+import com.beardedhen.androidbootstrap.utils.ViewUtils;
 
 import java.io.Serializable;
 
@@ -61,7 +61,7 @@ public class BootstrapEditText extends EditText implements BootstrapBrandView, R
         try {
             this.rounded = a.getBoolean(R.styleable.BootstrapEditText_roundedCorners, false);
 
-            int typeOrdinal = a.getInt(R.styleable.AwesomeTextView_bootstrapBrand, -1);
+            int typeOrdinal = a.getInt(R.styleable.BootstrapEditText_bootstrapBrand, -1);
             int sizeOrdinal = a.getInt(R.styleable.BootstrapEditText_bootstrapSize, -1);
 
             this.bootstrapBrand = DefaultBootstrapBrand.fromAttributeValue(typeOrdinal);
@@ -131,12 +131,7 @@ public class BootstrapEditText extends EditText implements BootstrapBrandView, R
                 cornerRadius,
                 rounded);
 
-        if (Build.VERSION.SDK_INT >= 16) {
-            setBackground(bg);
-        }
-        else {
-            setBackgroundDrawable(bg);
-        }
+        ViewUtils.setBackgroundDrawable(this, bg);
     }
 
     /*

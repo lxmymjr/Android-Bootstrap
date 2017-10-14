@@ -1,7 +1,5 @@
 package com.beardedhen.androidbootstrap.api.view;
 
-import android.support.annotation.IntRange;
-
 /**
  * Views which implement this interface visually display ongoing progress to users
  */
@@ -15,14 +13,14 @@ public interface ProgressView {
     /**
      * Updates the amount of progress displayed to the user.
      *
-     * @param progress an integer between 0-100
+     * @param progress a positive integer
      */
-    void setProgress(@IntRange(from=0,to=100) int progress);
+    void setProgress(int progress);
 
     /**
-     * @return the amount of progress displayed to the user (0-100)
+     * @return the amount of progress displayed to the user
      */
-    @IntRange(from=0,to=100)int getProgress();
+    int getProgress();
 
     /**
      * Sets whether the view should display a striped pattern.
@@ -50,4 +48,16 @@ public interface ProgressView {
      */
     boolean isAnimated();
 
+    /**
+     * @return int maxProgress. Returns the maxProgress value
+     */
+    int getMaxProgress();
+
+
+    /**
+     * Used for settings the maxprogress. Also check if Cumulative progress is smaller than the
+     * max before asigning.
+     * @param maxProgress the maxProgress value
+     */
+    void setMaxProgress(int maxProgress);
 }

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -14,6 +13,7 @@ import com.beardedhen.androidbootstrap.api.attributes.BootstrapHeading;
 import com.beardedhen.androidbootstrap.api.defaults.DefaultBootstrapHeading;
 import com.beardedhen.androidbootstrap.api.view.BootstrapHeadingView;
 import com.beardedhen.androidbootstrap.api.view.RoundableView;
+import com.beardedhen.androidbootstrap.utils.ViewUtils;
 
 import java.io.Serializable;
 
@@ -49,7 +49,7 @@ public class BootstrapLabel extends AwesomeTextView implements RoundableView, Bo
 
         try {
             int attrValue = a.getInt(R.styleable.BootstrapLabel_bootstrapHeading, 5);
-            this.roundable = a.getBoolean(R.styleable.BootstrapButton_roundedCorners, false);
+            this.roundable = a.getBoolean(R.styleable.BootstrapLabel_roundedCorners, false);
 
             this.bootstrapHeading = DefaultBootstrapHeading.fromAttributeValue(attrValue);
         }
@@ -105,12 +105,7 @@ public class BootstrapLabel extends AwesomeTextView implements RoundableView, Bo
                 roundable,
                 getHeight());
 
-        if (Build.VERSION.SDK_INT >= 16) {
-            setBackground(bg);
-        }
-        else {
-            setBackgroundDrawable(bg);
-        }
+        ViewUtils.setBackgroundDrawable(this, bg);
     }
 
     @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {

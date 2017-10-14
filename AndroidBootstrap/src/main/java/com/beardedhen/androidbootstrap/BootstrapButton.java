@@ -3,10 +3,10 @@ package com.beardedhen.androidbootstrap;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewParent;
@@ -15,11 +15,14 @@ import com.beardedhen.androidbootstrap.api.attributes.BootstrapBrand;
 import com.beardedhen.androidbootstrap.api.attributes.ViewGroupPosition;
 import com.beardedhen.androidbootstrap.api.defaults.ButtonMode;
 import com.beardedhen.androidbootstrap.api.defaults.DefaultBootstrapSize;
+import com.beardedhen.androidbootstrap.api.view.BadgeContainerView;
+import com.beardedhen.androidbootstrap.api.view.BootstrapBadgeView;
 import com.beardedhen.androidbootstrap.api.view.BootstrapSizeView;
 import com.beardedhen.androidbootstrap.api.view.ButtonModeView;
 import com.beardedhen.androidbootstrap.api.view.OutlineableView;
 import com.beardedhen.androidbootstrap.api.view.RoundableView;
 import com.beardedhen.androidbootstrap.utils.DimenUtils;
+import com.beardedhen.androidbootstrap.utils.ViewUtils;
 
 import java.io.Serializable;
 
@@ -29,7 +32,21 @@ import java.io.Serializable;
  * allowing the use of different selection modes e.g. Checkbox/Radio group.
  */
 public class BootstrapButton extends AwesomeTextView implements BootstrapSizeView,
-        OutlineableView, RoundableView, ButtonModeView {
+                                                                OutlineableView, RoundableView, ButtonModeView, BadgeContainerView,
+                                                                BootstrapBadgeView {
+
+
+    /**
+     * instances of this can be used with .setOnCheckedChangedLisener to notify you when the state of a radio, togle or checkbox button has changed.
+     */
+    public interface OnCheckedChangedListener{
+        /**
+         * This method will get called when the state of a radio button, checkbox or toggle button changes.
+         * @param bootstrapButton the view thats state is changing
+         * @param isChecked weather the button is checked or not.
+         */
+        public void OnCheckedChanged(BootstrapButton bootstrapButton, boolean isChecked);
+    }
 
     private static final String TAG = "com.beardedhen.androidbootstrap.BootstrapButton";
     private static final String KEY_MODE = "com.beardedhen.androidbootstrap.BootstrapButton.MODE";
@@ -43,12 +60,17 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
 
     private boolean roundedCorners;
     private boolean showOutline;
+    private boolean mustBeSelected;
 
     private float baselineFontSize;
     private float baselineVertPadding;
     private float baselineHoriPadding;
     private float baselineStrokeWidth;
     private float baselineCornerRadius;
+    private BootstrapBadge bootstrapBadge;
+    private String badgeText;
+
+    private OnCheckedChangedListener onCheckedChangedListener;
 
     public BootstrapButton(Context context) {
         super(context);
@@ -72,9 +94,11 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         try {
             this.roundedCorners = a.getBoolean(R.styleable.BootstrapButton_roundedCorners, false);
             this.showOutline = a.getBoolean(R.styleable.BootstrapButton_showOutline, false);
+            this.mustBeSelected = a.getBoolean(R.styleable.BootstrapButton_checked, false);
+            this.badgeText = a.getString(R.styleable.BootstrapButton_badgeText);
 
             int sizeOrdinal = a.getInt(R.styleable.BootstrapButton_bootstrapSize, -1);
-            int modeOrdinal = a.getInt(R.styleable.BootstrapButtonGroup_buttonMode, -1);
+            int modeOrdinal = a.getInt(R.styleable.BootstrapButton_buttonMode, -1);
 
             bootstrapSize = DefaultBootstrapSize.fromAttributeValue(sizeOrdinal).scaleFactor();
             buttonMode = ButtonMode.fromAttributeValue(modeOrdinal);
@@ -88,7 +112,13 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         baselineHoriPadding = DimenUtils.pixelsFromDpResource(getContext(), R.dimen.bootstrap_button_default_hori_padding);
         baselineStrokeWidth = DimenUtils.pixelsFromDpResource(getContext(), R.dimen.bootstrap_button_default_edge_width);
         baselineCornerRadius = DimenUtils.pixelsFromDpResource(getContext(), R.dimen.bootstrap_button_default_corner_radius);
+
         updateBootstrapState();
+
+        if (badgeText != null) {
+            setBadge(new BootstrapBadge(getContext()));
+            setBadgeText(badgeText);
+        }
     }
 
     @Override public Parcelable onSaveInstanceState() {
@@ -100,6 +130,11 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         bundle.putInt(KEY_INDEX, parentIndex);
         bundle.putFloat(BootstrapSizeView.KEY, bootstrapSize);
         bundle.putSerializable(KEY_MODE, buttonMode);
+
+        if (bootstrapBadge != null) {
+            bundle.putString(BadgeContainerView.KEY, bootstrapBadge
+                    .getBadgeText());
+        }
         return bundle;
     }
 
@@ -111,6 +146,10 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
             this.showOutline = bundle.getBoolean(OutlineableView.KEY);
             this.parentIndex = bundle.getInt(KEY_INDEX);
             this.bootstrapSize = bundle.getFloat(BootstrapSizeView.KEY);
+
+            if (bootstrapBadge != null) {
+                setBadgeText(bundle.getString(BadgeContainerView.KEY));
+            }
 
             Serializable m = bundle.getSerializable(KEY_MODE);
 
@@ -148,12 +187,7 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
                 showOutline,
                 roundedCorners);
 
-        if (Build.VERSION.SDK_INT >= 16) {
-            setBackground(bg);
-        }
-        else {
-            setBackgroundDrawable(bg);
-        }
+        ViewUtils.setBackgroundDrawable(this, bg);
 
         int vert = (int) (baselineVertPadding * bootstrapSize);
         int hori = (int) (baselineHoriPadding * bootstrapSize);
@@ -161,7 +195,6 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
     }
 
     @Override public boolean onTouchEvent(@NonNull MotionEvent event) {
-
         switch (buttonMode) {
             case REGULAR:
                 return super.onTouchEvent(event);
@@ -176,19 +209,22 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         }
     }
 
+    @Override
+    public void setSelected(boolean selected) {
+        super.setSelected(selected);
+        if (onCheckedChangedListener != null) {
+            onCheckedChangedListener.OnCheckedChanged(this, selected);
+        }
+    }
+
     private boolean handleRadioEvent(@NonNull MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            if (isSelected()) {
-                setSelected(false);
-            }
-            else { // notify parent to deselect any peers
-                setSelected(true);
+            setSelected(true); // notify parent to deselect any peers
 
-                ViewParent parent = getParent();
+            ViewParent parent = getParent();
 
-                if (parent instanceof BootstrapButtonGroup) {
-                    ((BootstrapButtonGroup) parent).onRadioToggle(parentIndex);
-                }
+            if (parent instanceof BootstrapButtonGroup) {
+                ((BootstrapButtonGroup) parent).onRadioToggle(parentIndex);
             }
             return true;
         }
@@ -235,9 +271,31 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         updateBootstrapState();
     }
 
+    @Override public void displayBadgeDrawable() {
+        if (bootstrapBadge != null) {
+            Drawable badgeDrawable = this.bootstrapBadge.getBadgeDrawable();
+
+            if (badgeDrawable != null) {
+                setCompoundDrawablesWithIntrinsicBounds(
+                        null,
+                        null, badgeDrawable,
+                        null);
+                setCompoundDrawablePadding(DimenUtils.dpToPixels(4));
+            }
+        }
+    }
+
     /*
      * Getters/Setters
      */
+
+    public boolean isMustBeSelected() {
+        return mustBeSelected;
+    }
+
+    public void setChecked(boolean checked) {
+        this.mustBeSelected = checked;
+    }
 
     @Override public boolean isShowOutline() {
         return showOutline;
@@ -265,8 +323,34 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         this.buttonMode = buttonMode;
     }
 
+    @Override public void setBadge(BootstrapBadge badge) {
+        this.bootstrapBadge = badge;
+        this.bootstrapBadge.setBootstrapBrand(getBootstrapBrand(), true);
+        this.bootstrapBadge.setBootstrapSize(getBootstrapSize());
+        displayBadgeDrawable();
+    }
+
+    @Nullable
+    @Override
+    public String getBadgeText() {
+        return bootstrapBadge != null ? bootstrapBadge.getBadgeText() : null;
+    }
+
+    @Override
+    public void setBadgeText(@Nullable String badgeText) {
+        if (bootstrapBadge != null) {
+            this.badgeText = badgeText;
+            this.bootstrapBadge.setBadgeText(this.badgeText);
+            displayBadgeDrawable();
+        }
+    }
+
     @Override public float getBootstrapSize() {
         return bootstrapSize;
+    }
+
+    @Override public BootstrapBadge getBootstrapBadge() {
+        return bootstrapBadge;
     }
 
     @Override public void setBootstrapSize(DefaultBootstrapSize bootstrapSize) {
@@ -278,4 +362,22 @@ public class BootstrapButton extends AwesomeTextView implements BootstrapSizeVie
         updateBootstrapState();
     }
 
+    /**
+     * NOTE this method only works if the buttons mode is not set to regular.
+     * for non Toggle, checkbox and radio see {@link BootstrapButton#setOnClickListener}
+     * @param listener OnCheckedChangedListener that will be fired when the schecked state ofa button is changed.
+     */
+    public void setOnCheckedChangedListener(OnCheckedChangedListener listener){
+        onCheckedChangedListener = listener;
+    }
+
+    /**
+     * NOTE this method only works if the buttons mode is set to regular.
+     * for Toggle, checkbox and radio see {@link BootstrapButton#setOnCheckedChangedListener}
+     * @param l OnClickListener that will be fired on click.
+     */
+    @Override
+    public void setOnClickListener(OnClickListener l) {
+        super.setOnClickListener(l);
+    }
 }

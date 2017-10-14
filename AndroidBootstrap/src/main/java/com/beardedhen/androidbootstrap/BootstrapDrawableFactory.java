@@ -2,17 +2,25 @@ package com.beardedhen.androidbootstrap;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.support.annotation.ColorInt;
+import android.text.TextPaint;
 
 import com.beardedhen.androidbootstrap.api.attributes.BootstrapBrand;
 import com.beardedhen.androidbootstrap.api.attributes.ViewGroupPosition;
 import com.beardedhen.androidbootstrap.api.defaults.DefaultBootstrapBrand;
+import com.beardedhen.androidbootstrap.api.defaults.ExpandDirection;
 import com.beardedhen.androidbootstrap.utils.ColorUtils;
 import com.beardedhen.androidbootstrap.utils.DimenUtils;
 
@@ -171,6 +179,20 @@ class BootstrapDrawableFactory {
         return drawable;
     }
 
+    static Drawable bootstrapAlert(Context context,
+                                   BootstrapBrand bootstrapBrand) {
+
+        GradientDrawable disabledGd = new GradientDrawable();
+
+        int strokeWidth = context.getResources().getDimensionPixelSize(R.dimen.bootstrap_alert_stroke_width);
+
+        disabledGd.setColor(ColorUtils.increaseOpacityFromInt(context, bootstrapBrand.getColor(),
+                                                            40));
+        disabledGd.setCornerRadius(6);
+        disabledGd.setStroke(strokeWidth, ColorUtils.increaseOpacityFromInt(context, bootstrapBrand.getColor(), 70));
+        return disabledGd;
+    }
+
     /**
      * Generates a colorstatelist for a bootstrap button
      *
@@ -194,6 +216,14 @@ class BootstrapDrawableFactory {
             }
         }
         return new ColorStateList(getStateList(), getColorList(defaultColor, activeColor, disabledColor));
+    }
+
+    static Drawable bootstrapWell(@ColorInt int backgroundColor, int cornerRadius, int strokeWidth, @ColorInt int strokeColor) {
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(backgroundColor);
+        background.setCornerRadius(cornerRadius);
+        background.setStroke(strokeWidth, strokeColor);
+        return background;
     }
 
     private static StateListDrawable setupStateDrawable(ViewGroupPosition position, int strokeWidth, GradientDrawable defaultGd, GradientDrawable activeGd, GradientDrawable disabledGd) {
@@ -236,16 +266,16 @@ class BootstrapDrawableFactory {
         return stateListDrawable;
     }
 
-    private static void setupDrawableCorners(ViewGroupPosition position, boolean rounded, int cornerRadius, GradientDrawable defaultGd, GradientDrawable activeGd, GradientDrawable disabledGd) {
+    private static void setupDrawableCorners(ViewGroupPosition position, boolean rounded, int r,
+                                             GradientDrawable defaultGd, GradientDrawable activeGd, GradientDrawable disabledGd) {
         if (rounded) {
             if (position == ViewGroupPosition.SOLO) {
-                defaultGd.setCornerRadius(cornerRadius);
-                activeGd.setCornerRadius(cornerRadius);
-                disabledGd.setCornerRadius(cornerRadius);
+                defaultGd.setCornerRadius(r);
+                activeGd.setCornerRadius(r);
+                disabledGd.setCornerRadius(r);
             }
             else {
                 float[] radii; // X/Y pairs for top-left, top-right, bottom-right, bottom-left.
-                float r = cornerRadius;
 
                 switch (position) {
                     case MIDDLE_HORI:
@@ -304,6 +334,166 @@ class BootstrapDrawableFactory {
             return new int[]{activeColor, activeColor, activeColor, activeColor, activeColor,
                     disabledColor, defaultColor};
         }
+    }
+
+    static StateListDrawable bootstrapDropDownArrow(Context context, int width, int height, ExpandDirection expandDirection, boolean outline, BootstrapBrand brand) {
+        StateListDrawable stateListDrawable = new StateListDrawable();
+
+        int defaultColor = outline ? brand.defaultFill(context) : brand.defaultTextColor(context);
+        int activeColor = outline ? ColorUtils.resolveColor(android.R.color.white, context) : brand.activeTextColor(context);
+        int disabledColor = outline ? brand.disabledFill(context) : brand.disabledTextColor(context);
+
+        if (Build.VERSION.SDK_INT >= 14) {
+            stateListDrawable.addState(new int[]{android.R.attr.state_hovered}, createArrowIcon(context, width, height, activeColor, expandDirection));
+        }
+
+        stateListDrawable.addState(new int[]{android.R.attr.state_activated}, createArrowIcon(context, width, height, activeColor, expandDirection));
+        stateListDrawable.addState(new int[]{android.R.attr.state_focused}, createArrowIcon(context, width, height, activeColor, expandDirection));
+        stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, createArrowIcon(context, width, height, activeColor, expandDirection));
+        stateListDrawable.addState(new int[]{android.R.attr.state_selected}, createArrowIcon(context, width, height, activeColor, expandDirection));
+        stateListDrawable.addState(new int[]{-android.R.attr.state_enabled}, createArrowIcon(context, width, height, disabledColor, expandDirection));
+        stateListDrawable.addState(new int[]{}, createArrowIcon(context, width, height, defaultColor, expandDirection));
+        return stateListDrawable;
+    }
+
+    static StateListDrawable bootstrapAlertCloseIcon(Context context, int width, int height, int inset) {
+
+        StateListDrawable stateListDrawable = new StateListDrawable();
+
+        int defaultColor = ColorUtils.resolveColor(R.color.bootstrap_alert_cross_default, context);
+        int activeColor = ColorUtils.resolveColor(R.color.bootstrap_gray, context);
+        int disabledColor = ColorUtils.resolveColor(R.color.bootstrap_alert_cross_default, context);
+
+        if (Build.VERSION.SDK_INT >= 14) {
+            stateListDrawable.addState(new int[]{android.R.attr.state_hovered}, createCloseCrossIcon(context, width, height, activeColor, inset));
+        }
+
+        stateListDrawable.addState(new int[]{android.R.attr.state_activated}, createCloseCrossIcon(context, width, height, activeColor, inset));
+        stateListDrawable.addState(new int[]{android.R.attr.state_focused}, createCloseCrossIcon(context, width, height, activeColor, inset));
+        stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, createCloseCrossIcon(context, width, height, activeColor, inset));
+        stateListDrawable.addState(new int[]{android.R.attr.state_selected}, createCloseCrossIcon(context, width, height, activeColor, inset));
+        stateListDrawable.addState(new int[]{-android.R.attr.state_enabled}, createCloseCrossIcon(context, width, height, disabledColor, inset));
+        stateListDrawable.addState(new int[]{}, createCloseCrossIcon(context, width, height, defaultColor, inset));
+        return stateListDrawable;
+    }
+
+    /**
+     * Creates arrow icon that depends on ExpandDirection
+     *
+     * @param context context
+     * @param width  width of icon in pixels
+     * @param height height of icon in pixels
+     * @param color arrow color
+     * @param expandDirection arrow direction
+     * @return icon drawable
+     */
+    private static Drawable createArrowIcon(Context context, int width, int height, int color, ExpandDirection expandDirection) {
+        Bitmap canvasBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(canvasBitmap);
+        Paint paint = new Paint();
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        paint.setStrokeWidth(1);
+        paint.setColor(color);
+        paint.setAntiAlias(true);
+        Path path = new Path();
+        path.setFillType(Path.FillType.EVEN_ODD);
+        switch (expandDirection) {
+            case UP:
+                path.moveTo(0, (height / 3) * 2);
+                path.lineTo(width, (height / 3) * 2);
+                path.lineTo(width / 2, height / 3);
+                path.lineTo(0, (height / 3) * 2);
+                break;
+            case DOWN:
+                path.moveTo(0, height / 3);
+                path.lineTo(width, height / 3);
+                path.lineTo(width / 2, (height / 3) * 2);
+                path.lineTo(0, height / 3);
+                break;
+        }
+        path.close();
+        canvas.drawPath(path, paint);
+        return new BitmapDrawable(context.getResources(), canvasBitmap);
+    }
+
+    private static Drawable createCloseCrossIcon(Context context, int width, int height, int color, int inset) {
+        Bitmap canvasBitmap = Bitmap.createBitmap(width + inset * 2, height + inset * 2, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(canvasBitmap);
+        Paint paint = new Paint();
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        paint.setStrokeWidth(3);
+        paint.setColor(color);
+        paint.setAntiAlias(true);
+        Path path = new Path();
+        path.setFillType(Path.FillType.EVEN_ODD);
+        path.moveTo(inset, inset);
+        path.lineTo(width + inset, height + inset);
+        path.moveTo(width + inset, inset);
+        path.lineTo(inset, height + inset);
+        path.close();
+        canvas.drawPath(path, paint);
+        return new BitmapDrawable(context.getResources(), canvasBitmap);
+    }
+
+    public static Drawable createBadgeDrawable(Context context, BootstrapBrand brand, int width,
+                                               int height, String badgeText, boolean insideAnObject) {
+
+        if (badgeText == null) {
+            return null;
+        }
+        else {
+            Paint badgePaint = new Paint();
+            Rect canvasBounds = new Rect();
+            TextPaint badgeTextPaint = new TextPaint();
+            badgePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            badgeTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            badgeTextPaint.setTextAlign(Paint.Align.CENTER);
+            badgeTextPaint.setTextSize((float) (height * 0.7));
+
+            if (insideAnObject) {
+                badgePaint.setColor(brand.defaultTextColor(context));
+                badgeTextPaint.setColor(brand.defaultFill(context));
+            }
+            else {
+                badgePaint.setColor(brand.defaultFill(context));
+                badgeTextPaint.setColor(brand.defaultTextColor(context));
+            }
+
+            int rectLength = (int) badgeTextPaint.measureText(badgeText);
+
+            Bitmap canvasBitmap = Bitmap.createBitmap(width + rectLength, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(canvasBitmap);
+            canvas.getClipBounds(canvasBounds);
+
+            int firstCircleDx = canvasBounds.left + canvasBounds.height() / 2;
+            int circleDy = canvasBounds.height() / 2;
+            int circleRadius = canvasBounds.height() / 2;
+            int secondCircleDx = firstCircleDx + rectLength;
+
+            Rect rect = new Rect();
+            rect.left = firstCircleDx;
+            rect.top = 0;
+            rect.right = rect.left + rectLength;
+            rect.bottom = canvasBounds.height();
+
+            canvas.drawCircle(firstCircleDx, circleDy, circleRadius, badgePaint);
+            canvas.drawRect(rect, badgePaint);
+            canvas.drawCircle(secondCircleDx, circleDy, circleRadius, badgePaint);
+            canvas.drawText(badgeText, canvasBounds.width() / 2, canvasBounds.height() / 2 - ((badgeTextPaint.descent() +
+                                                                                               badgeTextPaint.ascent()) / 2),
+                            badgeTextPaint);
+
+            return new BitmapDrawable(context.getResources(), canvasBitmap);
+        }
+    }
+
+    static ColorStateList bootstrapDropDownViewText(Context context) {
+
+        int defaultColor = ColorUtils.resolveColor(R.color.bootstrap_gray_dark, context);
+        int activeColor = ColorUtils.resolveColor(android.R.color.black, context);
+        int disabledColor = ColorUtils.resolveColor(R.color.bootstrap_gray_light, context);
+
+        return new ColorStateList(getStateList(), getColorList(defaultColor, activeColor, disabledColor));
     }
 
     private static void setInsetOnLayers(LayerDrawable[] ary, int l, int t, int r, int b) {

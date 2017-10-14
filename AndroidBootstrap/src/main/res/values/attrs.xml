@@ -36,10 +36,23 @@
         <enum name="h5" value="4"/>
         <enum name="h6" value="5"/>
     </attr>
+    
+    <attr name="bootstrapExpandDirection" format="enum">
+        <enum name="up" value="0"/>
+        <enum name="down" value="1"/>
+    </attr>
 
     <attr name="showOutline" format="boolean"/>
     <attr name="roundedCorners" format="boolean"/>
     <attr name="hasBorder" format="boolean"/>
+    <attr name="checkedButton" format="reference"/>
+    <attr name="checked" format="boolean"/>
+    <attr name="dropdownResource" format="reference"/>
+    <attr name="itemHeight" format="dimension"/>
+    <attr name="strongText" format="string"/>
+    <attr name="messageText" format="string"/>
+    <attr name="badgeText" format="string"/>
+    <attr name="dismissible" format="boolean"/>
 
     <!-- View attributes -->
 
@@ -48,6 +61,9 @@
         <attr name="bootstrapBrand"/>
         <attr name="fontAwesomeIcon"/>
         <attr name="typicon"/>
+        <attr name="materialIcon" />
+        <attr name="android:clickable" />
+        <attr name="android:gravity" />
     </declare-styleable>
 
     <declare-styleable name="BootstrapLabel">
@@ -61,6 +77,8 @@
         <attr name="roundedCorners"/>
         <attr name="bootstrapBrand"/>
         <attr name="bootstrapSize"/>
+        <attr name="checked"/>
+        <attr name="badgeText"/>
     </declare-styleable>
 
     <declare-styleable name="BootstrapButtonGroup">
@@ -69,15 +87,24 @@
         <attr name="roundedCorners"/>
         <attr name="bootstrapBrand"/>
         <attr name="bootstrapSize"/>
+        <attr name="checkedButton"/>
     </declare-styleable>
 
     <declare-styleable name="BootstrapProgressBar">
         <attr name="striped" format="boolean"/>
         <attr name="animated" format="boolean"/>
-        <attr name="progress" format="integer"/>
+        <attr name="bootstrapProgress" format="integer"/>
+        <attr name="bootstrapMaxProgress" format="integer"/>
+        <attr name="bootstrapshowPercentage" format="boolean"/>
         <attr name="roundedCorners"/>
         <attr name="bootstrapBrand"/>
         <attr name="bootstrapSize"/>
+    </declare-styleable>
+
+    <declare-styleable name="BootstrapProgressBarGroup">
+        <attr name="bootstrapMaxProgress"/>
+        <attr name="bootstrapSize"/>
+        <attr name="roundedCorners"/>
     </declare-styleable>
 
     <declare-styleable name="BootstrapCircleThumbnail">
@@ -96,6 +123,32 @@
     <declare-styleable name="BootstrapEditText">
         <attr name="roundedCorners"/>
         <attr name="bootstrapBrand"/>
+        <attr name="bootstrapSize"/>
+    </declare-styleable>
+
+    <declare-styleable name="BootstrapDropDown">
+        <attr name="bootstrapExpandDirection"/>
+        <attr name="dropdownResource"/>
+        <attr name="showOutline"/>
+        <attr name="roundedCorners"/>
+        <attr name="bootstrapBrand"/>
+        <attr name="bootstrapSize"/>
+        <attr name="itemHeight"/>
+    </declare-styleable>
+
+    <declare-styleable name="BootstrapWell">
+        <attr name="bootstrapSize"/>
+    </declare-styleable>
+
+    <declare-styleable name="BootstrapAlert">
+        <attr name="bootstrapBrand"/>
+        <attr name="strongText"/>
+        <attr name="messageText"/>
+        <attr name="dismissible"/>
+    </declare-styleable>
+
+    <declare-styleable name="BootstrapBadge">
+        <attr name="badgeText"/>
         <attr name="bootstrapSize"/>
     </declare-styleable>
 

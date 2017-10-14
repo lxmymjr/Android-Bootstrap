@@ -98,4 +98,8 @@ public enum DefaultBootstrapBrand implements BootstrapBrand {
         return resolveColor(textColor, context);
     }
 
+    @ColorInt public int getColor() {
+        return color;
+    }
+
 }

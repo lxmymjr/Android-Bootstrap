@@ -20,6 +20,7 @@ import com.beardedhen.androidbootstrap.api.view.BootstrapBrandView;
 import com.beardedhen.androidbootstrap.api.view.BootstrapTextView;
 import com.beardedhen.androidbootstrap.font.FontAwesome;
 import com.beardedhen.androidbootstrap.font.IconSet;
+import com.beardedhen.androidbootstrap.font.MaterialIcons;
 import com.beardedhen.androidbootstrap.font.Typicon;
 
 import java.io.Serializable;
@@ -81,6 +82,9 @@ public class AwesomeTextView extends TextView implements BootstrapTextView, Boot
             int typeOrdinal = a.getInt(R.styleable.AwesomeTextView_bootstrapBrand, -1);
             int faIconOrdinal = a.getInt(R.styleable.AwesomeTextView_fontAwesomeIcon, -1);
             int typiconOrdinal = a.getInt(R.styleable.AwesomeTextView_typicon, -1);
+            int materialIconOrdinal = a.getInt(R.styleable.AwesomeTextView_materialIcon, -1);
+
+            boolean clickable = a.getBoolean(R.styleable.AwesomeTextView_android_clickable, true);
 
             this.bootstrapBrand = DefaultBootstrapBrand.fromAttributeValue(typeOrdinal);
             boolean editMode = isInEditMode();
@@ -99,13 +103,23 @@ public class AwesomeTextView extends TextView implements BootstrapTextView, Boot
                     setIcon(fontAwesome.iconCodeForAttrIndex(faIconOrdinal), fontAwesome);
                 }
             }
+            if (materialIconOrdinal != -1) {
+                final IconSet materialIcons = TypefaceProvider.retrieveRegisteredIconSet(MaterialIcons.FONT_PATH, editMode);
+
+                if (!editMode) {
+                    setIcon(materialIcons.iconCodeForAttrIndex(materialIconOrdinal), materialIcons);
+                }
+            }
             markdownText = a.getString(R.styleable.AwesomeTextView_bootstrapText);
+
+            setClickable(clickable); // allows view to reach android:state_pressed
+
+            int gravity = a.getInt(R.styleable.AwesomeTextView_android_gravity, Gravity.CENTER);
+            setGravity(gravity);
         }
         finally {
             a.recycle();
         }
-        setClickable(true); // allows view to reach android:state_pressed
-        setGravity(Gravity.CENTER);
 
         if (markdownText != null) {
             setMarkdownText(markdownText);
@@ -210,6 +224,16 @@ public class AwesomeTextView extends TextView implements BootstrapTextView, Boot
     }
 
     /**
+     * Sets the text to display a MaterialIcon, replacing whatever text is already present.
+     * Used to set the text to display a MaterialIcon Icon.
+     *
+     * @param iconCode the fontawesome icon code e.g. "md_share"
+     */
+    public void setMaterialIcon(@FontAwesome.Icon CharSequence iconCode) {
+        setBootstrapText(new BootstrapText.Builder(getContext(), isInEditMode()).addMaterialIcon(iconCode).build());
+    }
+
+    /**
      * Sets the text to display a FontIcon, replacing whatever text is already present.
      * Used to set the text to display a Typicon.
      *
@@ -257,6 +281,16 @@ public class AwesomeTextView extends TextView implements BootstrapTextView, Boot
     @Override public void setText(CharSequence text, BufferType type) {
         super.setText(text, type);
         bootstrapText = null;
+    }
+
+    @Override
+    protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
+        super.onTextChanged(text, start, lengthBefore, lengthAfter);
+        if(!(text!=null && text.length()>0)){
+            setVisibility(GONE);
+        }else{
+            setVisibility(VISIBLE);
+        }
     }
 
 }
